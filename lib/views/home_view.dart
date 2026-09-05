@@ -260,7 +260,8 @@ class _HomeViewState extends State<HomeView> {
                           ),
                           child: Text(
                             _lastResult!['type'] ?? 'GAGAL',
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
+                            // DIPERBAIKI: Menggunakan FontWeight.bold (bukan FontWeight.black)
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
                           ),
                         ),
                         const SizedBox(height: 4),
