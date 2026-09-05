@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import '../services/firebase_scan_service.dart';
-import '../config/firebase_config.dart';
 
 class StudentsView extends StatefulWidget {
   const StudentsView({super.key});
@@ -11,131 +9,221 @@ class StudentsView extends StatefulWidget {
 }
 
 class _StudentsViewState extends State<StudentsView> {
-  List<Map<String, dynamic>> _students = [];
+  final DatabaseReference _ref =
+      FirebaseDatabase.instance.ref('attendance_today');
+
+  List<Map<String, dynamic>> _items = [];
   bool _loading = true;
   String _search = '';
 
   @override
   void initState() {
     super.initState();
-    _fetchStudents();
+    _listenToday();
   }
 
-  Future<void> _fetchStudents() async {
-    setState(() => _loading = true);
-    try {
-      final ref = FirebaseDatabase.instance.ref('students');
-      final snapshot = await ref.get();
-      if (snapshot.exists && snapshot.value != null) {
-        final Map<dynamic, dynamic> data = snapshot.value as Map<dynamic, dynamic>;
-        final List<Map<String, dynamic>> list = [];
-        data.forEach((key, val) {
-          if (val is Map) {
-            final studentMap = Map<String, dynamic>.from(val);
-            String nama = studentMap['nama']?.toString().toLowerCase() ?? '';
-            String nis = studentMap['nis']?.toString().toLowerCase() ?? '';
-            if (_search.isEmpty || nama.contains(_search.toLowerCase()) || nis.contains(_search.toLowerCase())) {
-              list.add(studentMap);
-            }
+  void _listenToday() {
+    _ref.onValue.listen((event) {
+      final List<Map<String, dynamic>> list = [];
+
+      if (event.snapshot.value != null && event.snapshot.value is Map) {
+        final Map<dynamic, dynamic> data =
+            event.snapshot.value as Map<dynamic, dynamic>;
+
+        data.forEach((key, value) {
+          if (value is Map) {
+            final item = Map<String, dynamic>.from(value);
+            item['key'] = key.toString();
+            list.add(item);
           }
         });
-        setState(() {
-          _students = list;
-          _loading = false;
-        });
-      } else {
-        setState(() {
-          _students = [];
-          _loading = false;
+
+        list.sort((a, b) {
+          final ta = a['time']?.toString() ?? '';
+          final tb = b['time']?.toString() ?? '';
+          return tb.compareTo(ta);
         });
       }
-    } catch (e) {
+
+      if (!mounted) return;
+      setState(() {
+        _items = list;
+        _loading = false;
+      });
+    }, onError: (e) {
+      if (!mounted) return;
       setState(() => _loading = false);
-    }
+    });
   }
 
-  Future<void> _markHadir(String nis, String nama) async {
-    final user = await FirebaseConfig.getUser();
-    FirebaseScanService.processScan(
-      qrData: nis,
-      method: 'manual',
-      scannedBy: user['name'] ?? 'Guru Piket',
-      onSuccess: (res) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$nama: ${res['message'] ?? 'Berhasil'}'),
-            backgroundColor: res['ok'] == true ? Colors.green : Colors.red,
-          ),
-        );
-      },
-      onError: (err) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(err), backgroundColor: Colors.red),
-        );
-      },
-    );
+  List<Map<String, dynamic>> get _filtered {
+    if (_search.trim().isEmpty) return _items;
+    final q = _search.toLowerCase();
+    return _items.where((s) {
+      final nama = s['nama']?.toString().toLowerCase() ?? '';
+      final nis = s['nis']?.toString().toLowerCase() ?? '';
+      final kelas = s['kelas']?.toString().toLowerCase() ?? '';
+      return nama.contains(q) || nis.contains(q) || kelas.contains(q);
+    }).toList();
+  }
+
+  Color _statusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'HADIR':
+        return Colors.green;
+      case 'TERLAMBAT':
+        return Colors.orange;
+      case 'PULANG':
+        return Colors.lightBlue;
+      case 'IZIN':
+        return Colors.cyan;
+      case 'SAKIT':
+        return Colors.purple;
+      case 'ALFA':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final data = _filtered;
+
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+          child: Row(
+            children: [
+              const Text(
+                'Riwayat Scan Hari Ini',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.lightBlue.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.lightBlueAccent),
+                ),
+                child: Text(
+                  '${data.length} scan',
+                  style: const TextStyle(
+                    color: Colors.lightBlueAccent,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: TextField(
-            onChanged: (v) {
-              _search = v;
-              _fetchStudents();
-            },
+            onChanged: (v) => setState(() => _search = v),
             style: const TextStyle(color: Colors.white, fontSize: 13),
             decoration: InputDecoration(
-              hintText: 'Cari nama / NIS...',
+              hintText: 'Cari nama / NIS / kelas...',
               hintStyle: const TextStyle(color: Colors.grey),
               prefixIcon: const Icon(Icons.search, color: Colors.grey),
               filled: true,
               fillColor: const Color(0xFF1E293B),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             ),
           ),
         ),
         Expanded(
           child: _loading
               ? const Center(child: CircularProgressIndicator())
-              : _students.isEmpty
-                  ? const Center(child: Text('Data siswa belum tersedia', style: TextStyle(color: Colors.grey)))
+              : data.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Belum ada scan hari ini.\nScan QR / ketik NIS di tab Scan.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    )
                   : ListView.builder(
-                      itemCount: _students.length,
+                      itemCount: data.length,
                       itemBuilder: (context, index) {
-                        final s = _students[index];
-                        final String nama = s['nama']?.toString() ?? '-';
-                        final String nis = s['nis']?.toString() ?? '-';
-                        final String kelas = s['kelas']?.toString() ?? '-';
-                        final String status = s['status']?.toString() ?? 'BELUM';
+                        final s = data[index];
+                        final nama = s['nama']?.toString() ?? '-';
+                        final nis = s['nis']?.toString() ?? '-';
+                        final kelas = s['kelas']?.toString() ?? '-';
+                        final status = s['status']?.toString() ?? '-';
+                        final time = s['time']?.toString() ?? '-';
+                        final jamMasuk = s['jam_masuk']?.toString() ?? '-';
+                        final jamPulang = s['jam_pulang']?.toString() ?? '-';
+                        final method = s['method']?.toString() ?? '-';
 
                         return Card(
                           color: const Color(0xFF1E293B),
-                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
                           child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor:
+                                  _statusColor(status).withOpacity(0.2),
+                              child: Text(
+                                kelas,
+                                style: TextStyle(
+                                  color: _statusColor(status),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                             title: Text(
                               nama,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                             subtitle: Text(
-                              'Kelas $kelas • NIS: $nis',
-                              style: const TextStyle(color: Colors.grey, fontSize: 11),
+                              'NIS: $nis • $method\nMasuk: $jamMasuk • Pulang: $jamPulang',
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 11),
                             ),
-                            trailing: status != 'BELUM'
-                                ? Chip(
-                                    label: Text(status, style: const TextStyle(fontSize: 10, color: Colors.white)),
-                                    backgroundColor: Colors.green.withOpacity(0.35),
-                                  )
-                                : ElevatedButton(
-                                    onPressed: () => _markHadir(nis, nama),
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue),
-                                    child: const Text('+ HADIR', style: TextStyle(fontSize: 10, color: Colors.white)),
+                            isThreeLine: true,
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: _statusColor(status),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
+                                  child: Text(
+                                    status,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  time,
+                                  style: const TextStyle(
+                                      color: Colors.white54, fontSize: 10),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
