@@ -92,8 +92,8 @@ class _StudentsViewState extends State<StudentsView> {
             style: const TextStyle(color: Colors.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Cari nama / NIS...',
-              hintStyle: const TextStyle(color: Colors.white54),
-              prefixIcon: const Icon(Icons.search, color: Colors.white54),
+              hintStyle: const TextStyle(color: Colors.grey),
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
               filled: true,
               fillColor: const Color(0xFF1E293B),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
@@ -104,7 +104,7 @@ class _StudentsViewState extends State<StudentsView> {
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : _students.isEmpty
-                  ? const Center(child: Text('Data siswa belum tersedia', style: TextStyle(color: Colors.white54)))
+                  ? const Center(child: Text('Data siswa belum tersedia', style: TextStyle(color: Colors.grey)))
                   : ListView.builder(
                       itemCount: _students.length,
                       itemBuilder: (context, index) {
@@ -124,7 +124,7 @@ class _StudentsViewState extends State<StudentsView> {
                             ),
                             subtitle: Text(
                               'Kelas $kelas • NIS: $nis',
-                              style: const TextStyle(color: Colors.white54, fontSize: 11),
+                              style: const TextStyle(color: Colors.grey, fontSize: 11),
                             ),
                             trailing: status != 'BELUM'
                                 ? Chip(
