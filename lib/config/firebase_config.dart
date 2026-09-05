@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FirebaseConfig {
-  // DATA DARI GOOGLE-SERVICES.JSON ANDA (SUDAH TEPAT & SESUAI)
+  // DATA DARI FIREBASE PROJECT SDIT UKHUWAH
   static const FirebaseOptions options = FirebaseOptions(
     apiKey: "AIzaSyCpnnsmGYcbYhW691-56aSbXXCb_tnlMWY",
     appId: "1:947534562613:android:ab45fa84f0d21b6887787c",
