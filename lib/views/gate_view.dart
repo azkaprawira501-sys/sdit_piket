@@ -5,7 +5,7 @@ import '../config/firebase_config.dart';
 class GateView extends StatefulWidget {
   const GateView({super.key});
 
-  @override;
+  @override
   State<GateView> createState() => _GateViewState();
 }
 
@@ -14,7 +14,7 @@ class _GateViewState extends State<GateView> {
   String _gateStatus = 'terbuka';
   bool _loading = false;
 
-  @override;
+  @override
   void initState() {
     super.initState();
     _listenGateStatus();
@@ -52,7 +52,7 @@ class _GateViewState extends State<GateView> {
     );
   }
 
-  @override;
+  @override
   Widget build(BuildContext context) {
     final locked = _gateStatus == 'terkunci';
 
