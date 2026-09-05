@@ -22,7 +22,6 @@ class _LoginViewState extends State<LoginView> {
     final password = _passwordController.text.trim();
 
     try {
-      // Verifikasi Login via Firebase RTDB
       final ref = FirebaseDatabase.instance.ref('users');
       final snapshot = await ref.get();
 
@@ -41,7 +40,7 @@ class _LoginViewState extends State<LoginView> {
         });
       }
 
-      // Fallback akun default jika Firebase users belum di-sync
+      // Fallback default
       if (!found && email == 'piket@sdit.sch.id' && password == 'password') {
         found = true;
         userId = 2;
@@ -75,7 +74,7 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
-  @override;
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
@@ -84,7 +83,7 @@ class _LoginViewState extends State<LoginView> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
-              crossAxisAlignment: CrossAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Icon(Icons.school_rounded, size: 64, color: Colors.lightBlueAccent),
                 const SizedBox(height: 12),
