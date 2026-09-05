@@ -34,4 +34,4 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-    - images/logo_sekolah.png
+    - assets/images/logo_sekolah.png
