@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'config/api_config.dart';
+import 'config/firebase_config.dart';
 import 'views/home_view.dart';
 import 'views/login_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Inisialisasi Firebase Engine
+  // Inisialisasi Firebase Cloud
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: FirebaseConfig.options,
+    );
   } catch (e) {
-    debugPrint('Firebase auto-init: $e');
+    debugPrint('Firebase init: $e');
   }
 
-  final loggedIn = await ApiConfig.isLoggedIn();
+  final loggedIn = await FirebaseConfig.isLoggedIn();
 
   runApp(
     MaterialApp(
