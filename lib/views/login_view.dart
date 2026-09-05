@@ -40,7 +40,6 @@ class _LoginViewState extends State<LoginView> {
         });
       }
 
-      // Fallback default
       if (!found && email == 'piket@sdit.sch.id' && password == 'password') {
         found = true;
         userId = 2;
@@ -95,17 +94,16 @@ class _LoginViewState extends State<LoginView> {
                 const Text(
                   'Aplikasi Guru Piket (Cloud Firebase)',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: Colors.white70),
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(height: 32),
 
-                // Email Field
                 TextField(
                   controller: _emailController,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
                   decoration: InputDecoration(
                     labelText: 'Email Guru Piket',
-                    labelStyle: const TextStyle(color: Colors.white70),
+                    labelStyle: const TextStyle(color: Colors.grey),
                     prefixIcon: const Icon(Icons.email_outlined, color: Colors.lightBlueAccent),
                     filled: true,
                     fillColor: const Color(0xFF1E293B),
@@ -114,14 +112,13 @@ class _LoginViewState extends State<LoginView> {
                 ),
                 const SizedBox(height: 14),
 
-                // Password Field
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    labelStyle: const TextStyle(color: Colors.white70),
+                    labelStyle: const TextStyle(color: Colors.grey),
                     prefixIcon: const Icon(Icons.lock_outline, color: Colors.lightBlueAccent),
                     filled: true,
                     fillColor: const Color(0xFF1E293B),
