@@ -35,6 +35,13 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
+      - name: Generate Launcher Icon HP
+        run: dart run flutter_launcher_icons
+
+      - name: Set App Name on Android
+        run: |
+          sed -i 's/android:label="[^"]*"/android:label="SDIT Piket"/' android/app/src/main/AndroidManifest.xml
+
       - name: Build APK Release
         run: flutter build apk --release
 
