@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
-import '../config/api_config.dart';
-import '../services/api_service.dart';
+import 'package:firebase_database/firebase_database.dart';
+import '../config/firebase_config.dart';
 import 'home_view.dart';
 
 class LoginView extends StatefulWidget {
@@ -12,58 +11,71 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  final _ipController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = TextEditingController(text: 'piket@sdit.sch.id');
+  final _passwordController = TextEditingController(text: 'password');
   bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedConfig();
-  }
-
-  Future<void> _loadSavedConfig() async {
-    final ip = await ApiConfig.getBaseUrl();
-    setState(() {
-      _ipController.text = ip;
-      _emailController.text = 'piket@sdit.sch.id';
-      _passwordController.text = 'password';
-    });
-  }
-
-  Future<void> _doLogin() async {
+  void _doLogin() async {
     setState(() => _isLoading = true);
 
-    await ApiConfig.setBaseUrl(_ipController.text.trim());
-    final res = await ApiService.login(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
-    );
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-    setState(() => _isLoading = false);
+    try {
+      // Verifikasi Login via Firebase RTDB
+      final ref = FirebaseDatabase.instance.ref('users');
+      final snapshot = await ref.get();
 
-    if (res['success'] == true) {
-      final data = res['data'] as Map<String, dynamic>;
-      await ApiConfig.saveUser(data['id'] as int, data['name'] as String);
+      bool found = false;
+      int userId = 0;
+      String userName = 'Guru Piket';
 
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeView()),
-      );
-    } else {
+      if (snapshot.exists && snapshot.value != null) {
+        final Map<dynamic, dynamic> users = snapshot.value as Map<dynamic, dynamic>;
+        users.forEach((key, value) {
+          if (value['email'] == email && value['password'] == password) {
+            found = true;
+            userId = value['id'] ?? 1;
+            userName = value['name'] ?? 'Guru Piket';
+          }
+        });
+      }
+
+      // Fallback akun default jika Firebase users belum di-sync
+      if (!found && email == 'piket@sdit.sch.id' && password == 'password') {
+        found = true;
+        userId = 2;
+        userName = 'Ustadz Ahmad (Guru Piket)';
+      }
+
+      setState(() => _isLoading = false);
+
+      if (found) {
+        await FirebaseConfig.saveUser(userId, userName);
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeView()),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email atau password salah!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(res['message']?.toString() ?? 'Login gagal'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error koneksi Firebase: $e'), backgroundColor: Colors.red),
       );
     }
   }
 
-  @override
+  @override;
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
@@ -72,52 +84,59 @@ class _LoginViewState extends State<LoginView> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAlignment.stretch,
               children: [
                 const Icon(Icons.school_rounded, size: 64, color: Colors.lightBlueAccent),
                 const SizedBox(height: 12),
                 const Text(
                   'SDIT UKHUWAH',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
                 ),
                 const Text(
-                  'Aplikasi Guru Piket',
+                  'Aplikasi Guru Piket (Cloud Firebase)',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: Colors.white70),
                 ),
-                const SizedBox(height: 28),
-                _buildField(
-                  controller: _ipController,
-                  label: 'IP Server Sekolah (Wi-Fi)',
-                  icon: Icons.wifi,
-                ),
-                const SizedBox(height: 12),
-                _buildField(
+                const SizedBox(height: 32),
+
+                // Email Field
+                TextField(
                   controller: _emailController,
-                  label: 'Email Guru Piket',
-                  icon: Icons.email_outlined,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    labelText: 'Email Guru Piket',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(Icons.email_outlined, color: Colors.lightBlueAccent),
+                    filled: true,
+                    fillColor: const Color(0xFF1E293B),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                _buildField(
+                const SizedBox(height: 14),
+
+                // Password Field
+                TextField(
                   controller: _passwordController,
-                  label: 'Password',
-                  icon: Icons.lock_outline,
-                  obscure: true,
+                  obscureText: true,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.lightBlueAccent),
+                    filled: true,
+                    fillColor: const Color(0xFF1E293B),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
+
                 ElevatedButton(
                   onPressed: _isLoading ? null : _doLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.lightBlue,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -127,37 +146,13 @@ class _LoginViewState extends State<LoginView> {
                         )
                       : const Text(
                           'MASUK APLIKASI',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                         ),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool obscure = false,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      style: const TextStyle(color: Colors.white, fontSize: 13),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: Icon(icon, color: Colors.lightBlueAccent),
-        filled: true,
-        fillColor: const Color(0xFF1E293B),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
