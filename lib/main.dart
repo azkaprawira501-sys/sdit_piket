@@ -7,7 +7,6 @@ import 'views/login_view.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Inisialisasi Firebase Cloud
   try {
     await Firebase.initializeApp(
       options: FirebaseConfig.options,
