@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +5,6 @@ import 'package:flutter/services.dart';
 class FirebaseScanService {
   static final FirebaseDatabase _db = FirebaseDatabase.instance;
 
-  /// Tembak data scan ke Firebase RTDB & Dengarkan Balasan Real-Time
   static Future<void> processScan({
     required String qrData,
     required String method,
@@ -15,7 +13,6 @@ class FirebaseScanService {
     required Function(String errorMessage) onError,
   }) async {
     try {
-      // 1. Buat Node Baru di bawah 'scans' dengan Status PENDING
       DatabaseReference newScanRef = _db.ref('scans').push();
 
       await newScanRef.set({
@@ -26,7 +23,6 @@ class FirebaseScanService {
         'created_at': ServerValue.timestamp,
       });
 
-      // 2. LISTEN REAL-TIME PERUBAHAN DATA PADA NODE DIBUAT (BALASAN LARAVEL)
       late StreamSubscription<DatabaseEvent> subscription;
 
       subscription = newScanRef.onValue.listen((event) {
@@ -37,14 +33,11 @@ class FirebaseScanService {
 
         final String status = rawData['status']?.toString() ?? 'PENDING';
 
-        // 3. Jika Status Berubah menjadi SUCCESS atau FAILED dari Laravel
         if (status == 'SUCCESS' || status == 'FAILED') {
-          // Play Sound Click / Beep
           SystemSound.play(SystemSoundType.click);
 
           final bool isSuccess = (status == 'SUCCESS');
 
-          // Kirim Hasil ke UI Flutter Popup
           onSuccess({
             'ok': isSuccess,
             'type': rawData['attendance_type']?.toString() ?? 'GAGAL',
@@ -56,12 +49,10 @@ class FirebaseScanService {
             'time': rawData['time']?.toString() ?? '',
           });
 
-          // Unsubscribe listener setelah mendapat balasan
           subscription.cancel();
         }
       });
 
-      // Timeout Pengaman: Batalkan jika tidak ada respon dalam 8 detik
       Timer(const Duration(seconds: 8), () {
         subscription.cancel();
       });
