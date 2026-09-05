@@ -84,8 +84,17 @@ class _LoginViewState extends State<LoginView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.school_rounded, size: 64, color: Colors.lightBlueAccent),
-                const SizedBox(height: 12),
+                // LOGO SEKOLAH (DARI ASSETS IMAGES)
+                Image.asset(
+                  'assets/images/logo_sekolah.png',
+                  height: 90,
+                  width: 90,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Fallback jika file gambar belum dimasukkan
+                    return const Icon(Icons.school_rounded, size: 64, color: Colors.lightBlueAccent);
+                  },
+                ),
+                const SizedBox(height: 16),
                 const Text(
                   'SDIT UKHUWAH',
                   textAlign: TextAlign.center,
