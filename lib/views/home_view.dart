@@ -131,7 +131,7 @@ class _HomeViewState extends State<HomeView> {
         onTap: (index) => setState(() => _currentIndex = index),
         backgroundColor: const Color(0xFF1E293B),
         selectedItemColor: Colors.lightBlueAccent,
-        unselectedItemColor: Colors.white54,
+        unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner_rounded), label: 'Scan'),
           BottomNavigationBarItem(icon: Icon(Icons.people_alt_rounded), label: 'Siswa'),
@@ -193,7 +193,7 @@ class _HomeViewState extends State<HomeView> {
                     style: const TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'monospace', fontWeight: FontWeight.bold),
                     decoration: const InputDecoration(
                       hintText: 'Ketik NIS Manual...',
-                      hintStyle: TextStyle(color: Colors.white38, fontSize: 12),
+                      hintStyle: TextStyle(color: Colors.grey, fontSize: 12),
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       border: InputBorder.none,
@@ -225,7 +225,7 @@ class _HomeViewState extends State<HomeView> {
                     child: Text(
                       'Scan Kartu Pelajar atau Ketik NIS\n(Real-Time Cloud Sync)',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white38, fontSize: 11),
+                      style: TextStyle(color: Colors.grey, fontSize: 11),
                     ),
                   )
                 : Container(
@@ -260,7 +260,6 @@ class _HomeViewState extends State<HomeView> {
                           ),
                           child: Text(
                             _lastResult!['type'] ?? 'GAGAL',
-                            // DIPERBAIKI: Menggunakan FontWeight.bold (bukan FontWeight.black)
                             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
                           ),
                         ),
