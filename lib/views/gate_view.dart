@@ -65,7 +65,7 @@ class _GateViewState extends State<GateView> {
             Icon(
               locked ? Icons.lock_rounded : Icons.lock_open_rounded,
               size: 80,
-              color: locked ? Colors.redAccent : Colors.greenAccent,   // ← perbaikan
+              color: locked ? Colors.redAccent : Colors.greenAccent,
             ),
             const SizedBox(height: 12),
             Text(
@@ -76,7 +76,7 @@ class _GateViewState extends State<GateView> {
             ElevatedButton(
               onPressed: _loading ? null : _toggleGate,
               style: ElevatedButton.styleFrom(
-                backgroundColor: locked ? Colors.green : Colors.red,   // ← perbaikan
+                backgroundColor: locked ? Colors.green : Colors.red,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
